@@ -160,7 +160,7 @@ export async function processPendingSessions(): Promise<void> {
         currencyTo: "sol",
         amount,
         destinationAddress:
-          confirmed.targetAction.destination,
+          confirmed.targetAction.type === "send_sol" ? confirmed.targetAction.destination : "",
       });
 
       await markSessionExecuted(id, {

@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     logger.info({ sessionId: session.id }, "payment session created");
     return NextResponse.json(session, { status: 201 });
   } catch (error) {
+    console.error(error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { message: "Invalid request", issues: error.format() },

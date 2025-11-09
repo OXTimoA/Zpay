@@ -100,10 +100,11 @@ export async function listPaymentSessions({
     }
   }
 
-  const ids = await redis.zrevrange(
+  const ids = await redis.zrange<string[]>(
     SESSION_INDEX_KEY,
     start,
-    start + normalizedLimit - 1
+    start + normalizedLimit - 1,
+    { rev: true },
   );
 
   if (ids.length === 0) {
@@ -111,7 +112,7 @@ export async function listPaymentSessions({
   }
 
   const keys = ids.map((id) => sessionKey(id));
-  const rawSessions = await redis.mget<PaymentSession>(...keys);
+  const rawSessions = await redis.mget<(PaymentSession | null)[]>(...keys);
   const sessions: PaymentSession[] = [];
   for (const raw of rawSessions) {
     if (!raw) continue;

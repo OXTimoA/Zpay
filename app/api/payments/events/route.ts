@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { consumePaymentEvents, eventsEnabled } from "@/lib/services/events";
@@ -23,7 +23,7 @@ export async function GET() {
   const topics = env.UPSTASH_KAFKA_TOPIC ? [env.UPSTASH_KAFKA_TOPIC] : [];
   const groupId = env.UPSTASH_KAFKA_CONSUMER_GROUP;
   const timeout = env.UPSTASH_KAFKA_CONSUMER_TIMEOUT_MS;
-  const instanceId = randomUUID();
+  const instanceId = crypto.randomUUID();
 
   const stream = new ReadableStream({
     async start(controller) {

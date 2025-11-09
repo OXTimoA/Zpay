@@ -1,5 +1,5 @@
 import { Kafka, Message } from "@upstash/kafka";
-import { randomUUID } from "node:crypto";
+import { randomUUID } from "crypto";
 import { env } from "../env";
 import { logger } from "../logger";
 
@@ -66,7 +66,7 @@ export function createConsumerInstance() {
   }
   return {
     consumer: kafka.consumer(),
-    instanceId: randomUUID(),
+    instanceId: crypto.randomUUID(),
   };
 }
 
