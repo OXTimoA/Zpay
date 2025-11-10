@@ -52,11 +52,11 @@ function normalizeDepositAddress(payload: Record<string, unknown>): string {
     payload.deposit_address,
     payload.wallet_address,
   ];
-  const address = candidates.find((value) => typeof value === "string" && value.length > 0);
+  const address = candidates.find((value) => typeof value === "string" && value.length > 0) as string | undefined;
   if (!address) {
     throw new Error("Flashift response missing deposit address");
   }
-  return address;
+  return address as string;
 }
 
 export async function createFlashiftSwap(params: FlashiftSwapParams): Promise<FlashiftTransaction> {

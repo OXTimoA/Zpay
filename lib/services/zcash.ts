@@ -28,25 +28,34 @@ async function rpcCall<T>(method: string, params: unknown[] = []): Promise<T> {
     params,
   };
 
-  const response = await axios.post<RpcResponse<T>>(env.ZCASH_RPC_URL, request, {
-    auth: {
-      username: env.ZCASH_RPC_USERNAME,
-      password: env.ZCASH_RPC_PASSWORD,
-    },
-    timeout: 15_000,
-  });
-
-  if (response.data.error) {
-    throw new Error(
-      `Zcash RPC error: ${response.data.error.code} ${response.data.error.message}`
+  try {
+    const response = await axios.post<RpcResponse<T>>(
+      env.ZCASH_RPC_URL,
+      request,
+      {
+        auth: {
+          username: env.ZCASH_RPC_USERNAME,
+          password: env.ZCASH_RPC_PASSWORD,
+        },
+        timeout: 15_000,
+      }
     );
-  }
 
-  return response.data.result;
+    if (response.data.error) {
+      throw new Error(
+        `Zcash RPC error: ${response.data.error.code} ${response.data.error.message}`
+      );
+    }
+
+    return response.data.result;
+  } catch (error) {
+    console.error(JSON.stringify(error, null, 2));
+    throw error;
+  }
 }
 
 export async function generateShieldedAddress(): Promise<string> {
-  return rpcCall<string>("z_getnewaddress", ["sapling"]);
+  return rpcCall<string>("z_getnewaccount", ["sapling"]);
 }
 
 interface ReceivedTransaction {
@@ -65,31 +74,26 @@ export interface PaymentDetectionResult {
 export async function detectPayment(
   session: PaymentSession
 ): Promise<PaymentDetectionResult> {
-  try {
-    const result = await rpcCall<ReceivedTransaction[]>("z_listreceivedbyaddress", [
-      session.zcashAddress,
-      env.PAYMENT_CONFIRMATIONS_REQUIRED,
-    ]);
+  const result = await rpcCall<ReceivedTransaction[]>(
+    "z_listreceivedbyaddress",
+    [session.zcashAddress, env.PAYMENT_CONFIRMATIONS_REQUIRED]
+  );
 
-    const match = result.find(
-      (tx) => Number(tx.amount) >= session.amountZec && tx.confirmations >= env.PAYMENT_CONFIRMATIONS_REQUIRED
-    );
+  console.log(JSON.stringify(result, null, 2));
 
-    if (!match) {
-      return { detected: false };
-    }
+  const match = result.find(
+    (tx) =>
+      Number(tx.amount) >= session.amountZec &&
+      tx.confirmations >= env.PAYMENT_CONFIRMATIONS_REQUIRED
+  );
 
-    return {
-      detected: true,
-      txId: match.txid,
-      confirmations: match.confirmations,
-    };
-  } catch (error) {
-    logger.error(
-      { sessionId: session.id, error },
-      "Failed to fetch Zcash payment status"
-    );
-    throw error;
+  if (!match) {
+    return { detected: false };
   }
-}
 
+  return {
+    detected: true,
+    txId: match.txid,
+    confirmations: match.confirmations,
+  };
+}

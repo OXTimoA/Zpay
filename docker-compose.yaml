@@ -1,0 +1,11 @@
+version: '3'
+services:
+  zcashd:
+    image: electriccoinco/zcashd:latest
+    container_name: zcash-node
+    restart: unless-stopped
+    ports:
+      - "8232:8232"   # RPC
+      - "8233:8233"   # P2P
+    volumes:
+      - ./zcash_data:/srv/zcashd/.zcash
